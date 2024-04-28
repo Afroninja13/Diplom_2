@@ -1,33 +1,31 @@
-import pytest
 import allure
 from data import TestData
-from helpers import random_word, login_user, create_user, delete_user
+from helpers import random_word, login_user
+from conftest import user_model
 
 
 class TestLoginUser:
-    access_token = None
-    email = random_word()
-    password = random_word()
-    name = random_word()
-
-    def setup_class(self):
-        response = create_user(self.email, self.password, self.name)
-        self.access_token = response.json()['accessToken']
-
-    def teardown_class(self):
-        delete_user(self.access_token)
 
     @allure.title('Проверка логина пользователя с валидными значениями login, password')
-    def test_login_user_with_valid_credentials(self):
-        response = login_user(self.email, self.password)
+    def test_login_user_with_valid_credentials(self, user_model):
+        response = login_user(user_model['payload']['email'], user_model['payload']['password'])
         assert response.status_code == 200
         assert response.json()['success'] is True
 
+    @allure.title('Проверка ошибки логина пользователя c невалидным значением поля email')
+    def test_login_user_with_invalid_email_return_error(self, user_model):
+        response = login_user(random_word(), user_model['payload']['password'])
+        assert response.status_code == 401
+        assert response.json()['message'] == TestData.LOGIN_USER_FIELD_ERROR
+
+    @allure.title('Проверка ошибки логина пользователя c невалидным значением поля password')
+    def test_login_user_with_invalid_password_return_error(self, user_model):
+        response = login_user(user_model['payload']['email'], random_word())
+        assert response.status_code == 401
+        assert response.json()['message'] == TestData.LOGIN_USER_FIELD_ERROR
+
     @allure.title('Проверка ошибки логина пользователя c невалидными значениями полей email, password')
-    @pytest.mark.parametrize('email, password', [(email, random_word()),
-                                                 (random_word(), password),
-                                                 (random_word(), random_word())])
-    def test_login_user_with_invalid_credentials_return_error(self, email, password):
-        response = login_user(email, password)
+    def test_login_user_with_invalid_credentials_return_error(self, user_model):
+        response = login_user(random_word(), random_word())
         assert response.status_code == 401
         assert response.json()['message'] == TestData.LOGIN_USER_FIELD_ERROR

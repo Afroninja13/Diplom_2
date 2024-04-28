@@ -1,27 +1,17 @@
 import allure
 from data import TestData
-from helpers import random_word, create_user, delete_user, create_order, get_ingredients_data, get_user_orders
+from helpers import create_order, get_ingredients_data, get_user_orders
+from conftest import user_model
 
 
 class TestGetUserOrders:
 
-    def setup_class(self):
-        self.email = random_word()
-        self.password = random_word()
-        self.name = random_word()
-        response_create = create_user(self.email, self.password, self.name)
-        self.access_token = response_create.json()['accessToken']
-        self.ingredients_id_list = []
-
-    def teardown_class(self):
-        delete_user(self.access_token)
-
     @allure.title('Проверка получения заказов пользователя с авторизацией')
-    def test_get_user_orders_with_authorization(self):
+    def test_get_user_orders_with_authorization(self, user_model):
         ingredients_data = get_ingredients_data().json()
-        self.ingredients_id_list.append(ingredients_data['data'][0]['_id'])
-        create_order(self.ingredients_id_list, self.access_token)
-        response = get_user_orders(self.access_token)
+        ingredients_id_list = [ingredients_data['data'][0]['_id']]
+        create_order(ingredients_id_list, user_model['response_create'].json()['accessToken'])
+        response = get_user_orders(user_model['response_create'].json()['accessToken'])
         assert response.status_code == 200
         assert response.json()['orders'] is not None
 

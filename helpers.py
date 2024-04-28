@@ -1,4 +1,3 @@
-import json
 import random
 import string
 import allure
@@ -12,15 +11,15 @@ def random_word():
 
 
 @allure.step('Создаем пользователя')
-def create_user(email, password, name):
-    payload = {'email': email + '@ya.ru', 'password': password, 'name': name}
+def create_user(email=None, password=None, name=None):
+    payload = {'email': email, 'password': password, 'name': name}
     response_create = requests.post(TestData.BASE_URL + TestData.CREATE_USER_URL, data=payload)
     return response_create
 
 
 @allure.step('Логинимся пользователем')
 def login_user(email=None, password=None):
-    payload = {'email': email + '@ya.ru', 'password': password}
+    payload = {'email': email, 'password': password}
     response_login = requests.post(TestData.BASE_URL + TestData.LOGIN_USER_URL, data=payload)
     return response_login
 
@@ -58,5 +57,3 @@ def get_user_orders(access_token):
     headers = {'Authorization': access_token}
     response_orders = requests.get(TestData.BASE_URL + TestData.ORDER_URL, headers=headers)
     return response_orders
-
-
